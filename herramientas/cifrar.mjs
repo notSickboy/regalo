@@ -3,7 +3,7 @@
 // La carpeta de entrada es la original (index.html + fotos/). Las fotos se incrustan en el HTML
 // como data URIs y todo se cifra con AES-256-GCM (clave PBKDF2-SHA-256, 600000 iteraciones).
 // Sin dependencias: solo Node 18+.
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ITER = 600000;
@@ -23,7 +23,11 @@ html = html.replace(/src="(fotos\/[^"]+\.jpe?g)"/g, (_, ruta) => {
 console.error(`Fotos incrustadas: ${n}`);
 
 const { subtle } = globalThis.crypto;
-const sal = crypto.getRandomValues(new Uint8Array(16));
+// Si ya existe una versión cifrada, reutiliza su sal: con la misma contraseña la llave queda igual
+// y los dispositivos con "Recordarme" siguen abriendo sin pedirla. El IV siempre es nuevo.
+const previa = existsSync(salida) && readFileSync(salida, "utf8").match(/var SAL="([A-Za-z0-9+/=]+)"/);
+const sal = previa ? new Uint8Array(Buffer.from(previa[1], "base64")) : crypto.getRandomValues(new Uint8Array(16));
+if (previa) console.error("Reutilizando la sal anterior (\"Recordarme\" sigue funcionando si la contraseña es la misma)");
 const iv = crypto.getRandomValues(new Uint8Array(12));
 const base = await subtle.importKey("raw", new TextEncoder().encode(clave), "PBKDF2", false, ["deriveKey"]);
 const llave = await subtle.deriveKey(

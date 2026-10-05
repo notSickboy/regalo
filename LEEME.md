@@ -19,18 +19,14 @@ En el repositorio no hay fotos ni texto legible; sin la contraseña no se puede 
 2. En el repositorio: Settings > Pages > Source: "Deploy from a branch", rama `main`, carpeta `/ (root)`.
 3. La página queda en `https://USUARIO.github.io/REPOSITORIO/`.
 
-## Registro de aperturas y cupones (opcional)
-1. Crea una hoja nueva en Google Sheets.
-2. Extensiones > Apps Script. Borra lo que haya y pega el contenido de `registro/Code.gs`. Guarda.
-3. Implementar > Nueva implementación > tipo "Aplicación web".
-   - Ejecutar como: **Yo**
-   - Quién tiene acceso: **Cualquier usuario**
-4. Autoriza los permisos (hoja y correo) y copia la URL que termina en `/exec`.
-5. En el `index.html` original, pega esa URL en `window.REGISTRO_URL="";`, vuelve a cifrar
-   (ver "Contraseña") y sube el nuevo `index.html`.
+## Avisos por correo
+Cada vez que se abre el regalo o se toca un cupón, la página manda un correo (vía FormSubmit) a la
+dirección que está en `window.REGISTRO_URL` dentro del `index.html` original. Esa dirección va dentro
+de la parte cifrada, así que no es visible sin la contraseña.
 
-Cada vez que se abra el regalo o se toque un cupón se agrega un renglón a la hoja.
-Cada cupón manda además un correo a la cuenta dueña de la hoja.
-Para contar aperturas: `=CONTAR.SI(B:B;"apertura")` en cualquier celda.
-
-Para abrir la página sin que cuente (por ejemplo, tú mismo), agrega `#diego` al final de la dirección.
+- La primera vez, FormSubmit manda un correo de **activación**: hay que abrirlo y confirmar. Antes de
+  eso no llega ningún aviso.
+- Para abrir la página sin que avise (por ejemplo, tú mismo), agrega `#diego` al final de la dirección.
+- Para desactivarlo, deja `window.REGISTRO_URL="";` en el original y vuelve a cifrar.
+- Alternativa con hoja de Google Sheets: `registro/Code.gs` (Apps Script publicado como aplicación
+  web); en ese caso, pon su URL `/exec` en `REGISTRO_URL` y regresa el `fetch` de `enviar()` a texto plano.
